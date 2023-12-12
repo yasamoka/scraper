@@ -12,6 +12,7 @@ use html5ever::QualName;
 use html5ever::{driver, serialize};
 use tendril::TendrilSink;
 
+use crate::r#trait::TryNextError;
 use crate::selector::Selector;
 use crate::{ElementRef, Node};
 
@@ -94,6 +95,7 @@ impl Html {
         Select {
             inner: self.tree.nodes(),
             selector,
+            index: 0,
         }
     }
 
@@ -126,6 +128,7 @@ impl Html {
 pub struct Select<'a, 'b> {
     inner: Nodes<'a, Node>,
     selector: &'b Selector,
+    index: usize,
 }
 
 impl<'a, 'b> Iterator for Select<'a, 'b> {
@@ -135,6 +138,7 @@ impl<'a, 'b> Iterator for Select<'a, 'b> {
         for node in self.inner.by_ref() {
             if let Some(element) = ElementRef::wrap(node) {
                 if element.parent().is_some() && self.selector.matches(&element) {
+                    self.index += 1;
                     return Some(element);
                 }
             }
@@ -163,6 +167,29 @@ impl<'a, 'b> DoubleEndedIterator for Select<'a, 'b> {
 }
 
 impl FusedIterator for Select<'_, '_> {}
+
+impl<'a, 'b> TryNextError for Select<'a, 'b> {
+    type Error = ElementNotFoundError<'b>;
+
+    fn try_next_err(&mut self) -> Self::Error {
+        let Self {
+            selector, index, ..
+        } = self;
+        Self::Error {
+            selector,
+            index: *index,
+        }
+    }
+}
+
+/// Error to be returned when iterator over descendent elements matching a selector does not find an element.
+#[derive(Debug)]
+pub struct ElementNotFoundError<'b> {
+    /// Selector that was applied
+    pub selector: &'b Selector,
+    /// Index where no element was found
+    pub index: usize,
+}
 
 mod serializable;
 mod tree_sink;

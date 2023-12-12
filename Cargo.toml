@@ -14,7 +14,7 @@ readme = "README.md"
 
 [dependencies]
 cssparser = "0.31.0"
-ego-tree = "0.6.2"
+ego-tree = { git = "https://github.com/yasamoka/ego-tree", branch = "try-next" }
 html5ever = "0.26"
 selectors = "0.25.0"
 tendril = "0.4.3"

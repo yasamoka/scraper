@@ -151,6 +151,7 @@ pub mod html;
 pub mod node;
 pub mod selectable;
 pub mod selector;
+pub mod r#trait;
 
 #[cfg(feature = "atomic")]
 pub(crate) mod tendril_util {
